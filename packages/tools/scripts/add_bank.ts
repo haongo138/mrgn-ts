@@ -1,18 +1,20 @@
+import dotenv from "dotenv";
 import { AccountMeta, Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider, Wallet, BN } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
-import { I80F48_ONE, loadKeypairFromFile } from "./utils";
-import { assertI80F48Approx, assertKeysEqual } from "./softTests";
+import { I80F48_ONE, I80F48_ZERO, loadKeypairFromFile } from "./utils";
 import { bigNumberToWrappedI80F48, TOKEN_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 // TODO move to package import after update
-import { InterestRateConfigRaw, BankConfigCompactRaw } from "../../marginfi-client-v2/src/models/bank";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import { InterestRateConfigRaw, BankConfigCompactRaw } from "@mrgnlabs/marginfi-client-v2";
+
+dotenv.config();
 
 /**
  * If true, send the tx. If false, output the unsigned b58 tx to console.
  */
-const sendTx = false;
+const sendTx = true;
 const verbose = true;
 
 type Config = {
@@ -29,15 +31,15 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",
-  GROUP_KEY: new PublicKey("4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8"),
+  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
   ORACLE: new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
   SOL_ORACLE_FEED: new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
-  ADMIN: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
-  FEE_PAYER: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
-  BANK_MINT: new PublicKey("So11111111111111111111111111111111111111112"),
+  ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
+  FEE_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
+  BANK_MINT: new PublicKey("cAXr3vF8pq6i6JxYBHKeUe4xMmj1e76r8oAYsAFgEEh"),
   SEED: 0,
-  MULTISIG_PAYER: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
+  MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 
   // TODO configurable settings up here (currently, scroll down)
 };
@@ -48,8 +50,8 @@ const deriveGlobalFeeState = (programId: PublicKey) => {
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/staging-deploy.json");
+  const connection = new Connection("https://api.testnet.sonic.game/", "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
 
   // @ts-ignore
   const provider = new AnchorProvider(connection, wallet, {
@@ -74,6 +76,21 @@ async function main() {
 
   const transaction = new Transaction();
 
+  const customConfig = {
+    depositLimit: new BN(1_000_000_000 * 10 ** 6),
+    borrowLimit: new BN(1_000_000_000 * 10 ** 6),
+    totalAssetValueInitLimit: new BN(1_000_000_000 * 10 ** 6),
+    riskTier: {
+      isolated: {},
+    },
+    liabilityWeightInit: I80F48_ONE,
+    liabilityWeightMaint: I80F48_ONE,
+
+    // must be I80F48_ZERO if risk tier is isolated, otherwise I80F48_ONE
+    assetWeightInit: I80F48_ZERO,
+    assetWeightMaint: I80F48_ZERO,
+  };
+
   const rate: InterestRateConfigRaw = {
     optimalUtilizationRate: bigNumberToWrappedI80F48(0.5),
     plateauInterestRate: bigNumberToWrappedI80F48(0.6),
@@ -86,20 +103,18 @@ async function main() {
   };
 
   let bankConfig: BankConfigCompactRaw = {
-    assetWeightInit: I80F48_ONE,
-    assetWeightMaint: I80F48_ONE,
-    liabilityWeightInit: I80F48_ONE,
-    liabilityWeightMaint: I80F48_ONE,
-    depositLimit: new BN(1000000000),
+    assetWeightInit: customConfig.assetWeightInit,
+    assetWeightMaint: customConfig.assetWeightMaint,
+    liabilityWeightInit: customConfig.liabilityWeightInit,
+    liabilityWeightMaint: customConfig.liabilityWeightMaint,
+    depositLimit: customConfig.depositLimit,
     interestRateConfig: rate,
     operationalState: {
       operational: undefined,
     },
-    borrowLimit: new BN(1000000000),
-    riskTier: {
-      collateral: undefined,
-    },
-    totalAssetValueInitLimit: new BN(100000000000),
+    borrowLimit: customConfig.borrowLimit,
+    riskTier: customConfig.riskTier,
+    totalAssetValueInitLimit: customConfig.totalAssetValueInitLimit,
     oracleMaxAge: 100,
     assetTag: 0,
     permissionlessBadDebtSettlement: false,

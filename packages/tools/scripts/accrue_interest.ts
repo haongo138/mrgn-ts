@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { loadKeypairFromFile } from "./utils";

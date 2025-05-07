@@ -1,7 +1,7 @@
 // Runs once per group, before any staked banks can be init.
 import { AccountMeta, Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider, Wallet, BN } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { I80F48_ONE, loadKeypairFromFile } from "./utils";
 import {
@@ -36,16 +36,25 @@ export type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",
-  GROUP_KEY: new PublicKey("2v4DXmmnhqrERUYpZaScrXC1jdJoUYhzMjuEcytqsLeh"),
-  BANK: new PublicKey("14pCPReiear5V7viGVtdafwm6yCfBoz7pTkigGzcrdQm"),
-  ADMIN: new PublicKey("mfi1dtjy2mJ9J21UoaQ5dsRnbcg4MBU1CTacVyBp1HF"),
-
+  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
+  BANK: new PublicKey("GQ7qTwK4WJ3Gi6ZCtpuDGcbLSSaXrgPfDJmT5K1ZQSR1"),
+  ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
   // MULTISIG_PAYER: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
 };
 
 async function main() {
-  let bankConfig = defaultBankConfigOptRaw();
+  const tokenMintMetadata = {
+    address: new PublicKey("3KETcC3MvTdni4tZSHVGLytLEP5YRkD9QHSMYKgdC6SU"),
+    decimals: 8,
+    supply: 1000000,
+  };
+  let bankConfig = {
+    ...defaultBankConfigOptRaw(),
+    depositLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
+    borrowLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
+    totalAssetValueInitLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
+  };
   await updateBankConfig(bankConfig, process.env.MARGINFI_WALLET, config, { simulate, sendTx });
 }
 

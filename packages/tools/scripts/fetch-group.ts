@@ -1,11 +1,9 @@
-import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 
 import { loadKeypairFromFile } from "./utils";
-import { assertI80F48Approx, assertKeysEqual } from "./softTests";
 
-import { wrappedI80F48toBigNumber } from "@mrgnlabs/mrgn-common";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi.json";
 
 const verbose = true;
@@ -16,13 +14,13 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  GROUP: new PublicKey("6b9vFQjfYav2tVzns2cD21xU7E4z9LDnHTv9wjCJsknf"),
+  PROGRAM_ID: "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",
+  GROUP: new PublicKey("4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8"),
 };
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+  const connection = new Connection("https://solana-mainnet.g.alchemy.com/v2/HSPerR3bY_Fdy4xFpdTXVAjscS7mhXd8", "confirmed");
   const wallet = loadKeypairFromFile(process.env.HOME + "/.config/solana/id.json");
 
   // @ts-ignore

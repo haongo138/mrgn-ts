@@ -1,23 +1,18 @@
 // Runs once per group, before any staked banks can be init.
+import dotenv from "dotenv";
 import { AccountMeta, Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
-import { Program, AnchorProvider, Wallet, BN } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
-import { I80F48_ONE, loadKeypairFromFile } from "./utils";
-import {
-  bigNumberToWrappedI80F48,
-  TOKEN_PROGRAM_ID,
-  WrappedI80F48,
-  wrappedI80F48toBigNumber,
-} from "@mrgnlabs/mrgn-common";
-import { InterestRateConfigRaw, RiskTierRaw } from "@mrgnlabs/marginfi-client-v2";
-import { assertBNEqual, assertI80F48Approx, assertKeysEqual } from "./softTests";
+import { loadKeypairFromFile } from "./utils";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+
+dotenv.config();
 
 /**
  * If true, send the tx. If false, output the unsigned b58 tx to console.
  */
-const sendTx = false;
+const sendTx = true;
 const verbose = true;
 
 type Config = {
@@ -33,20 +28,26 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  GROUP_KEY: new PublicKey("FCPfpHA69EbS8f9KKSreTRkXbzFpunsKuYf5qNmnJjpo"),
-  BANK: new PublicKey("3jt43usVm7qL1N5qPvbzYHWQRxamPCRhri4CxwDrf6aL"),
-  SOL_ORACLE: new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
-  SOL_ORACLE_FEED: new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
-  ADMIN: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
+  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
+  BANK: new PublicKey("H1iZvhTwtQEyrvz1j6BxrL4S5WbKasE2MAofzYKhjK2h"),
+  SOL_ORACLE: new PublicKey("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
+  SOL_ORACLE_FEED: new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+  ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 
-  MULTISIG_PAYER: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
+  MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
+};
+
+const oracleMeta: AccountMeta = {
+  pubkey: config.SOL_ORACLE_FEED,
+  isSigner: false,
+  isWritable: false,
 };
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/staging-deploy.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
 
   // @ts-ignore
   const provider = new AnchorProvider(connection, wallet, {
@@ -65,6 +66,7 @@ async function main() {
         admin: config.ADMIN,
         bank: config.BANK,
       })
+      .remainingAccounts([oracleMeta])
       .instruction()
   );
 
