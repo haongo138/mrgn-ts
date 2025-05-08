@@ -573,7 +573,7 @@ async function swapNonUsdcInTokenAccounts(
 
 async function main() {
   console.log("Starting liquidator");
-  const config = await getConfig(process.env.MRNG_ENV as any ?? "mainnet1");
+  const config = getConfig(process.env.MRNG_ENV as any ?? "mainnet1");
   const client = await MarginfiClient.fetch(config, wallet, connection);
   const group = await MarginfiGroup.fetch(config, client.program);
   const liquidatorAccount = await MarginfiAccount.fetch(LIQUIDATOR_PK, client);
