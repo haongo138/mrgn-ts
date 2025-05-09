@@ -19,8 +19,8 @@ type Config = {
   PROGRAM_ID: string;
   GROUP_KEY: PublicKey;
   BANK: PublicKey;
-  SOL_ORACLE: PublicKey;
-  SOL_ORACLE_FEED: PublicKey;
+  ORACLE: PublicKey;
+  ORACLE_FEED: PublicKey;
   ADMIN: PublicKey;
 
   // Keep default values to use the defaults...
@@ -31,15 +31,15 @@ const config: Config = {
   PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
   GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
   BANK: new PublicKey("GQ7qTwK4WJ3Gi6ZCtpuDGcbLSSaXrgPfDJmT5K1ZQSR1"),
-  SOL_ORACLE: new PublicKey("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
-  SOL_ORACLE_FEED: new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+  ORACLE: new PublicKey("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
+  ORACLE_FEED: new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
   ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 
   MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 };
 
 const oracleMeta: AccountMeta = {
-  pubkey: config.SOL_ORACLE_FEED,
+  pubkey: config.ORACLE_FEED,
   isSigner: false,
   isWritable: false,
 };
@@ -60,13 +60,13 @@ async function main() {
 
   transaction.add(
     await program.methods
-      .lendingPoolConfigureBankOracle(3, config.SOL_ORACLE_FEED)
+      .lendingPoolConfigureBankOracle(3, config.ORACLE)
       .accountsPartial({
         // group: config.GROUP_KEY,
-        // admin: config.ADMIN,
+        admin: config.ADMIN,
         bank: config.BANK,
       })
-      .remainingAccounts([])
+      .remainingAccounts([oracleMeta])
       .instruction()
   );
 
