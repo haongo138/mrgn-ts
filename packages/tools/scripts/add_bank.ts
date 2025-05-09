@@ -32,12 +32,12 @@ type Config = {
 
 const config: Config = {
   PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
-  GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
-  ORACLE: new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
-  SOL_ORACLE_FEED: new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
+  GROUP_KEY: new PublicKey("4M4o7DkXsX7FDmp3WpY9KYvmNpxSomWY4fTQzCG8P5PV"),
+  ORACLE: new PublicKey("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
+  SOL_ORACLE_FEED: new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
   ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
   FEE_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
-  BANK_MINT: new PublicKey("cAXr3vF8pq6i6JxYBHKeUe4xMmj1e76r8oAYsAFgEEh"),
+  BANK_MINT: new PublicKey("3KETcC3MvTdni4tZSHVGLytLEP5YRkD9QHSMYKgdC6SU"),
   SEED: 0,
   MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 

@@ -1,15 +1,17 @@
+import dotenv from "dotenv";
 import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { loadKeypairFromFile } from "./utils";
-import { assertI80F48Approx, assertKeysEqual } from "./softTests";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+
+dotenv.config();
 
 /**
  * If true, send the tx. If false, output the unsigned b58 tx to console.
  */
-const sendTx = false;
+const sendTx = true;
 const verbose = true;
 
 type Config = {
@@ -18,8 +20,8 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  ADMIN_KEY: new PublicKey("CYXEgwbPHu2f9cY3mcUkinzDoDcsSan7myh1uBvYRbEw"),
+  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  ADMIN_KEY: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 };
 
 const deriveGlobalFeeState = (programId: PublicKey) => {
@@ -29,8 +31,8 @@ const deriveGlobalFeeState = (programId: PublicKey) => {
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
   const marginfiGroup = Keypair.generate();
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/staging-deploy.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
   console.log("wallet: " + wallet.publicKey);
 
   // @ts-ignore

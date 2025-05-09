@@ -1,26 +1,23 @@
 // Run deposit_single_pool first to convert to LST. In production, these will likely be atomic.
+import dotenv from "dotenv";
 import {
   AccountMeta,
   ComputeBudgetProgram,
   Connection,
-  Keypair,
   PublicKey,
-  SystemProgram,
   Transaction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { DEFAULT_API_URL, loadEnvFile, loadKeypairFromFile, SINGLE_POOL_PROGRAM_ID } from "./utils";
 import {
-  createAssociatedTokenAccountIdempotent,
-  createAssociatedTokenAccountInstruction,
-  createSyncNativeInstruction,
-  getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { createAssociatedTokenAccountIdempotentInstruction } from "@mrgnlabs/mrgn-common";
+import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from "@mrgnlabs/mrgn-common";
+
+dotenv.config();
 
 type Config = {
   PROGRAM_ID: string;
@@ -44,7 +41,7 @@ type Config = {
         SINGLE_POOL_PROGRAM_ID
     );
     ```
-     and
+    and
     ```
     const [pool] = PublicKey.findProgramAddressSync(
         [Buffer.from("stake"), config.STAKE_POOL.toBuffer()],
@@ -104,35 +101,33 @@ const examples = {
       new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"), // usdc oracle
     ],
   },
+  borrowTest: {
+    PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+    GROUP: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
+    ACCOUNT: new PublicKey("xstLNqYTAoeSHRrUAirXecvc7JyW1TMF9ctYo5Z9yZh"),
+    BANK: new PublicKey("AdtPZENKdzFHfPspvpMvYY1X9wVXABKX6ne8LnUwK69z"),
+    MINT: new PublicKey("6mSAxhGQTbAdqTdXDcHuZiNmnaAGicNFVaaAKU1YXBr5"),
+    AMOUNT: new BN(10 * 10 ** 6),
+    REMAINING: [
+      new PublicKey("GQ7qTwK4WJ3Gi6ZCtpuDGcbLSSaXrgPfDJmT5K1ZQSR1"),
+      new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+      // new PublicKey("EJuhmswifV6wumS28Sfr5W8B18CJ29m1ZNKkhbhbYDCA"),
+      // new PublicKey("HX5WM3qzogAfRCjBUWwnniLByMfFrjm1b5yo4KoWGR27"),
+      new PublicKey("AdtPZENKdzFHfPspvpMvYY1X9wVXABKX6ne8LnUwK69z"),
+      new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+    ],
+  },
 };
 
-const config: Config = examples.borrowJupSOLAgainstUSDC;
-
-// const config: Config = {
-//   PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-//   GROUP: new PublicKey("FCPfpHA69EbS8f9KKSreTRkXbzFpunsKuYf5qNmnJjpo"),
-//   ACCOUNT: new PublicKey("E3uJyxW232EQAVZ9P9V6CFkxzjqqVdbh8XvUmxtZdGUt"),
-//   BANK: new PublicKey("3evdJSa25nsUiZzEUzd92UNa13TPRJrje1dRyiQP5Lhp"),
-//   STAKE_POOL: new PublicKey("AvS4oXtxWdrJGCJwDbcZ7DqpSqNQtKjyXnbkDbrSk6Fq"),
-//   MINT: new PublicKey("So11111111111111111111111111111111111111112"),
-//   AMOUNT: new BN(0.0002 * 10 ** 9), // sol has 9 decimals
-//   REMAINING: [
-//     new PublicKey("3jt43usVm7qL1N5qPvbzYHWQRxamPCRhri4CxwDrf6aL"),
-//     new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
-//     new PublicKey("BADo3D6nMtGnsAaTv3iEes8mMcq92TuFoBWebFe8kzeA"), // lst mint
-//     new PublicKey("3e8RuaQMCPASZSMJAskHX6ZfuTtQ3JvoNPFoEvaVRn78"), // lst pool
-//     new PublicKey("3evdJSa25nsUiZzEUzd92UNa13TPRJrje1dRyiQP5Lhp"),
-//     new PublicKey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
-//   ],
-// };
+const config: Config = examples.borrowTest;
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  loadEnvFile(".env.api");
-  const apiUrl = process.env.API_URL || DEFAULT_API_URL;
+  // loadEnvFile(".env.api");
+  const apiUrl = process.env.PRIVATE_RPC_ENDPOINT || DEFAULT_API_URL;
   console.log("api: " + apiUrl);
   const connection = new Connection(apiUrl, "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/phantom-wallet.json");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
   console.log("wallet: " + wallet.publicKey);
 
   // @ts-ignore

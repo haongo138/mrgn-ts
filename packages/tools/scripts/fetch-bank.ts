@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 
@@ -8,7 +9,7 @@ import { wrappedI80F48toBigNumber } from "@mrgnlabs/mrgn-common";
 import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 
-const verbose = true;
+dotenv.config();
 
 type Config = {
   PROGRAM_ID: string;
@@ -16,14 +17,14 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",
-  BANK: new PublicKey("2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB"),
+  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  BANK: new PublicKey("AdtPZENKdzFHfPspvpMvYY1X9wVXABKX6ne8LnUwK69z"),
 };
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/.config/solana/id.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
 
   // @ts-ignore
   const provider = new AnchorProvider(connection, wallet, {
@@ -34,6 +35,10 @@ async function main() {
   let bank = await program.account.bank.fetch(config.BANK);
 
   console.log("group: " + bank.group);
+  console.log("bank: " + JSON.stringify({
+    totalAssetShares: wrappedI80F48toBigNumber(bank.totalAssetShares).toString(),
+    totalLiabilities: wrappedI80F48toBigNumber(bank.totalLiabilityShares).toString(),
+  }));
 }
 
 main().catch((err) => {
