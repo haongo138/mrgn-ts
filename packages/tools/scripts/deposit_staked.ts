@@ -1,10 +1,11 @@
 // Run deposit_single_pool first to convert to LST. In production, these will likely be atomic.
 import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { loadKeypairFromFile, SINGLE_POOL_PROGRAM_ID } from "./utils";
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@mrgnlabs/mrgn-common";
 
 type Config = {
   PROGRAM_ID: string;
@@ -51,11 +52,11 @@ async function main() {
   const transaction = new Transaction();
   transaction.add(
     await program.methods
-      .lendingAccountDeposit(config.AMOUNT)
+      .lendingAccountDeposit(config.AMOUNT, false)
       .accounts({
-        marginfiGroup: config.GROUP,
+        // marginfiGroup: config.GROUP,
         marginfiAccount: config.ACCOUNT,
-        signer: wallet.publicKey,
+        // signer: wallet.publicKey,
         bank: config.BANK,
         signerTokenAccount: lstAta,
         // bankLiquidityVault = deriveLiquidityVault(id, bank)

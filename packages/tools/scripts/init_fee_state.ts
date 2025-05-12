@@ -1,5 +1,6 @@
+import dotenv from "dotenv";
 import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
 import { bigNumberToWrappedI80F48, WrappedI80F48 } from "@mrgnlabs/mrgn-common";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
@@ -7,10 +8,12 @@ import { loadKeypairFromFile } from "./utils";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { Keypair } from "@solana/web3.js";
 
+dotenv.config();
+
 /**
  * If true, send the tx. IF false, output the unsigned b58 tx to console.
  */
-const sendTx = false;
+const sendTx = true;
 
 type Config = {
   PROGRAM_ID: string;
@@ -20,10 +23,10 @@ type Config = {
   MULTISIG_PAYER: PublicKey;
 };
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  ADMIN_PUBKEY: new PublicKey("H4QMTHMVbJ3KrB5bz573cBBZKoYSZ2B4mSST1JKzPUrH"),
-  WALLET_PUBKEY: new PublicKey("H4QMTHMVbJ3KrB5bz573cBBZKoYSZ2B4mSST1JKzPUrH"),
-  MULTISIG_PAYER: new PublicKey("3HGdGLrnK9DsnHi1mCrUMLGfQHcu6xUrXhMY14GYjqvM"),
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+  ADMIN_PUBKEY: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
+  WALLET_PUBKEY: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
+  MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 };
 
 type InitGlobalFeeStateArgs = {
@@ -59,8 +62,8 @@ async function main() {
 
 async function createAndSendTx() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/.config/solana/id.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
 
   const args: InitGlobalFeeStateArgs = {
     payer: wallet.publicKey,
@@ -93,7 +96,7 @@ async function createAndSendTx() {
 
 async function echoBase58Tx() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
   const args: InitGlobalFeeStateArgs = {
     payer: config.MULTISIG_PAYER,
     admin: config.ADMIN_PUBKEY,

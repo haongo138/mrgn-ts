@@ -1,6 +1,6 @@
-import { Marginfi as MarginfiIdlTypeV0_1_2 } from "./marginfi-types_0.1.2";
-import MARGINFI_IDL_V0_1_2_JSON from "./marginfi_0.1.2.json";
+import { Marginfi } from "./marginfi";
+import MARGINFI_IDL_JSON from "./marginfi.json";
 
-export const MARGINFI_IDL_V0_1_2 = MARGINFI_IDL_V0_1_2_JSON;
-export const MARGINFI_IDL = MARGINFI_IDL_V0_1_2;
-export type MarginfiIdlType = MarginfiIdlTypeV0_1_2;
+export const MARGINFI_IDL_LATEST = MARGINFI_IDL_JSON;
+export const MARGINFI_IDL = MARGINFI_IDL_LATEST;
+export type MarginfiIdlType = Marginfi;

@@ -16,6 +16,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from "@mrgnlabs/mrgn-common";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 dotenv.config();
 
@@ -102,31 +103,32 @@ const examples = {
     ],
   },
   borrowTest: {
-    PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
-    GROUP: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
-    ACCOUNT: new PublicKey("xstLNqYTAoeSHRrUAirXecvc7JyW1TMF9ctYo5Z9yZh"),
-    BANK: new PublicKey("AdtPZENKdzFHfPspvpMvYY1X9wVXABKX6ne8LnUwK69z"),
+    PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+    GROUP: new PublicKey("GY5MTE56S4fcTsh6u7y1Y3vDAEc8DLCq4RPhkGokSfGx"),
+    ACCOUNT: new PublicKey("dxb4zzmSqGUgVaX3NGvhXGS2iawcb6eTSeka2z4eqAf"),
+    BANK: new PublicKey("3qunF6taEaM473TDfLCS9R9xLECMPeZi78rVcnNpDr8d"),
     MINT: new PublicKey("6mSAxhGQTbAdqTdXDcHuZiNmnaAGicNFVaaAKU1YXBr5"),
-    AMOUNT: new BN(10 * 10 ** 6),
+    AMOUNT: new BN(1 * 10 ** 6),
     REMAINING: [
-      new PublicKey("GQ7qTwK4WJ3Gi6ZCtpuDGcbLSSaXrgPfDJmT5K1ZQSR1"),
-      new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+      new PublicKey("CzwEH4tg6eNUhswG9USeWheHiviKWRfN8jpV3RQPmXG2"), // usdc bank
+      new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"), // usdc oracle
       // new PublicKey("EJuhmswifV6wumS28Sfr5W8B18CJ29m1ZNKkhbhbYDCA"),
       // new PublicKey("HX5WM3qzogAfRCjBUWwnniLByMfFrjm1b5yo4KoWGR27"),
-      new PublicKey("AdtPZENKdzFHfPspvpMvYY1X9wVXABKX6ne8LnUwK69z"),
+      new PublicKey("3qunF6taEaM473TDfLCS9R9xLECMPeZi78rVcnNpDr8d"),
       new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
     ],
   },
 };
 
 const config: Config = examples.borrowTest;
+const options = {
+  simulate: true,
+  sendTx: true,
+};
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  // loadEnvFile(".env.api");
-  const apiUrl = process.env.PRIVATE_RPC_ENDPOINT || DEFAULT_API_URL;
-  console.log("api: " + apiUrl);
-  const connection = new Connection(apiUrl, "confirmed");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
   const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
   console.log("wallet: " + wallet.publicKey);
 
@@ -171,9 +173,9 @@ async function main() {
     await program.methods
       .lendingAccountBorrow(config.AMOUNT)
       .accounts({
-        marginfiGroup: config.GROUP,
+        // marginfiGroup: config.GROUP,
         marginfiAccount: config.ACCOUNT,
-        signer: wallet.publicKey,
+        // signer: wallet.publicKey,
         bank: config.BANK,
         destinationTokenAccount: ata,
         // bankLiquidityVaultAuthority = deriveLiquidityVaultAuthority(id, bank);
@@ -186,12 +188,33 @@ async function main() {
 
   const priorityFee = 100000; // 0.0001 SOL (100,000 lamports)
   transaction.instructions.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }));
+  transaction.feePayer = wallet.publicKey;
 
-  try {
-    const signature = await sendAndConfirmTransaction(connection, transaction, [wallet]);
-    console.log("Transaction signature:", signature);
-  } catch (error) {
-    console.error("Transaction failed:", error);
+  if (options?.simulate) {
+    try {
+      const simulation = await connection.simulateTransaction(transaction);
+      console.log("Simulation results:", simulation);
+    } catch (error) {
+      console.error("Simulation failed:", error);
+    }
+  }
+
+  if (options?.sendTx) {
+    try {
+      const signature = await sendAndConfirmTransaction(connection, transaction, [wallet]);
+      console.log("Transaction signature:", signature);
+    } catch (error) {
+      console.error("Transaction failed:", error);
+    }
+  } else {
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
+    const base58Transaction = bs58.encode(serializedTransaction);
+    console.log("Base58-encoded transaction:", base58Transaction);
   }
 
   console.log("borrow: " + config.AMOUNT.toString() + " from " + config.BANK);

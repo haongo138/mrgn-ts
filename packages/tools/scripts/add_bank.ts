@@ -31,13 +31,13 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
-  GROUP_KEY: new PublicKey("4M4o7DkXsX7FDmp3WpY9KYvmNpxSomWY4fTQzCG8P5PV"),
-  ORACLE: new PublicKey("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
-  SOL_ORACLE_FEED: new PublicKey("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+  GROUP_KEY: new PublicKey("GY5MTE56S4fcTsh6u7y1Y3vDAEc8DLCq4RPhkGokSfGx"),
+  ORACLE: new PublicKey("D1cetfnbaxo61QEmpaTLWYoB32K4yEnB8xmvWsvPia6o"), // SONIC
+  SOL_ORACLE_FEED: new PublicKey("AD8TsWft2b715Vh92NUTwAiu8csPBPmKy3B7BsFzyfVb"),
   ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
   FEE_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
-  BANK_MINT: new PublicKey("3KETcC3MvTdni4tZSHVGLytLEP5YRkD9QHSMYKgdC6SU"),
+  BANK_MINT: new PublicKey("Coets5ZWJabjSqBhet3CctwSgHYvVtXizmbY71b6FqA"),
   SEED: 0,
   MULTISIG_PAYER: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 
@@ -50,7 +50,7 @@ const deriveGlobalFeeState = (programId: PublicKey) => {
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  const connection = new Connection("https://api.testnet.sonic.game/", "confirmed");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
   const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
 
   // @ts-ignore
@@ -81,14 +81,14 @@ async function main() {
     borrowLimit: new BN(1_000_000_000 * 10 ** 6),
     totalAssetValueInitLimit: new BN(1_000_000_000 * 10 ** 6),
     riskTier: {
-      isolated: {},
+      collateral: {},
     },
     liabilityWeightInit: I80F48_ONE,
     liabilityWeightMaint: I80F48_ONE,
 
     // must be I80F48_ZERO if risk tier is isolated, otherwise I80F48_ONE
-    assetWeightInit: I80F48_ZERO,
-    assetWeightMaint: I80F48_ZERO,
+    assetWeightInit: I80F48_ONE,
+    assetWeightMaint: I80F48_ONE,
   };
 
   const rate: InterestRateConfigRaw = {
@@ -115,7 +115,7 @@ async function main() {
     borrowLimit: customConfig.borrowLimit,
     riskTier: customConfig.riskTier,
     totalAssetValueInitLimit: customConfig.totalAssetValueInitLimit,
-    oracleMaxAge: 100,
+    oracleMaxAge: 0,
     assetTag: 0,
     permissionlessBadDebtSettlement: false,
     freezeSettings: false,
@@ -144,7 +144,7 @@ async function main() {
     )
     .accounts({
       marginfiGroup: config.GROUP_KEY,
-      admin: config.ADMIN,
+      // admin: config.ADMIN,
       feePayer: config.FEE_PAYER,
       bankMint: config.BANK_MINT,
       // bank: // derived from mint/seed

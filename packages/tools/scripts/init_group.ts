@@ -20,7 +20,7 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
   ADMIN_KEY: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
 };
 
@@ -48,7 +48,7 @@ async function main() {
   const transaction = new Transaction();
   transaction.add(
     await program.methods
-      .marginfiGroupInitialize()
+      .marginfiGroupInitialize(false)
       .accountsPartial({
         marginfiGroup: marginfiGroup.publicKey,
         feeState: deriveGlobalFeeState(new PublicKey(config.PROGRAM_ID))[0],

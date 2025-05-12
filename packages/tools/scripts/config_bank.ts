@@ -3,7 +3,7 @@ import { AccountMeta, Connection, PublicKey, Transaction, sendAndConfirmTransact
 import { Program, AnchorProvider, Wallet, BN } from "@coral-xyz/anchor";
 import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
-import { I80F48_ONE, loadKeypairFromFile } from "./utils";
+import { I80F48_ONE, I80F48_ZERO, loadKeypairFromFile } from "./utils";
 import {
   bigNumberToWrappedI80F48,
   TOKEN_PROGRAM_ID,
@@ -36,24 +36,35 @@ export type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "4ktkTCjsHh1VdqwqkXBjGqZKnBkycWZMe3AEXEcdSbwV",
-  GROUP_KEY: new PublicKey("5XSQ5Zxhe4VG6qwvsJPu5ZVsWgcfTYFQMsXoZFhnhNW7"),
-  BANK: new PublicKey("GQ7qTwK4WJ3Gi6ZCtpuDGcbLSSaXrgPfDJmT5K1ZQSR1"),
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+  GROUP_KEY: new PublicKey("GY5MTE56S4fcTsh6u7y1Y3vDAEc8DLCq4RPhkGokSfGx"),
+  BANK: new PublicKey("3qunF6taEaM473TDfLCS9R9xLECMPeZi78rVcnNpDr8d"),
   ADMIN: new PublicKey("4ai4tdtEsanxqhuVg1BXCsHYyQPgG3rPsE99sCGoaks8"),
   // MULTISIG_PAYER: new PublicKey("AZtUUe9GvTFq9kfseu9jxTioSgdSfjgmZfGQBmhVpTj1"),
 };
 
 async function main() {
   const tokenMintMetadata = {
-    address: new PublicKey("3KETcC3MvTdni4tZSHVGLytLEP5YRkD9QHSMYKgdC6SU"),
+    address: new PublicKey("6mSAxhGQTbAdqTdXDcHuZiNmnaAGicNFVaaAKU1YXBr5"),
     decimals: 8,
-    supply: 1000000,
+    supply: 1000_000,
   };
   let bankConfig = {
     ...defaultBankConfigOptRaw(),
     depositLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
     borrowLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
     totalAssetValueInitLimit: new BN(tokenMintMetadata.supply * 10 ** tokenMintMetadata.decimals),
+    riskTier: {
+      isolated: {},
+    },
+    liabilityWeightInit: I80F48_ONE,
+    liabilityWeightMaint: I80F48_ONE,
+
+    // must be I80F48_ZERO if risk tier is isolated, otherwise I80F48_ONE
+    assetWeightInit: I80F48_ZERO,
+    assetWeightMaint: I80F48_ZERO,
+
+    oracleMaxAge: 0,
   };
   await updateBankConfig(bankConfig, process.env.MARGINFI_WALLET, config, { simulate, sendTx });
 }
@@ -80,8 +91,8 @@ export async function updateBankConfig(
     await program.methods
       .lendingPoolConfigureBank(bankConfig)
       .accounts({
-        marginfiGroup: config.GROUP_KEY,
-        admin: config.ADMIN,
+        // marginfiGroup: config.GROUP_KEY,
+        // admin: config.ADMIN,
         bank: config.BANK,
       })
       .instruction()

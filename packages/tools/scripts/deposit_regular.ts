@@ -1,13 +1,16 @@
+import dotenv from "dotenv";
 // Run deposit_single_pool first to convert to LST. In production, these will likely be atomic.
 import { Connection, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
 import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
-import { DEFAULT_API_URL, loadEnvFile, loadKeypairFromFile } from "./utils";
+import { DEFAULT_API_URL, loadEnvFile, loadKeypairFromFile, loadKeypairFromPrivateKey } from "./utils";
 import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, getAssociatedTokenAddressSync } from "@mrgnlabs/mrgn-common";
+
+dotenv.config();
 
 type Config = {
   PROGRAM_ID: string;
@@ -20,21 +23,24 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  GROUP: new PublicKey("FCPfpHA69EbS8f9KKSreTRkXbzFpunsKuYf5qNmnJjpo"),
-  ACCOUNT: new PublicKey("F12SjiKaksVMJs7EQ2GBaWHLr5shFRei1seDDwFA2pek"),
-  BANK: new PublicKey("3evdJSa25nsUiZzEUzd92UNa13TPRJrje1dRyiQP5Lhp"),
-  MINT: new PublicKey("So11111111111111111111111111111111111111112"),
-  AMOUNT: new BN(0.2 * 10 ** 9), // sol has 9 decimals
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+  GROUP: new PublicKey("GY5MTE56S4fcTsh6u7y1Y3vDAEc8DLCq4RPhkGokSfGx"),
+
+  // user's marginfi account
+  // ACCOUNT: new PublicKey("9kZdKJQqKSpbhJzip95KMkafbt5N6YbcJJAWhfewrktE"),
+
+  // deployer's marginfi account
+  ACCOUNT: new PublicKey("dxb4zzmSqGUgVaX3NGvhXGS2iawcb6eTSeka2z4eqAf"),
+  BANK: new PublicKey("5JBpz6PwjhPVSSMGiW9Ju2zRd2QfhLQafksBj3QmgQCy"),
+  MINT: new PublicKey("3KETcC3MvTdni4tZSHVGLytLEP5YRkD9QHSMYKgdC6SU"),
+  AMOUNT: new BN(100 * 10 ** 8),
 };
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  loadEnvFile(".env.api");
-  const apiUrl = process.env.API_URL || DEFAULT_API_URL;
-  console.log("api: " + apiUrl);
-  const connection = new Connection(apiUrl, "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/staging-deploy.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
+  // const wallet = loadKeypairFromPrivateKey("CtmTX2THJhvhpWCx8TUoBfb5p94wVkPpfMDgR2JZZFYWKrxZ8uAaKwDuqxrtFXtGYMnBhRSYbhWLvGNedUeFWkv");
   console.log("wallet: " + wallet.publicKey);
 
   // @ts-ignore
@@ -66,11 +72,11 @@ async function main() {
   }
   transaction.add(
     await program.methods
-      .lendingAccountDeposit(config.AMOUNT)
+      .lendingAccountDeposit(config.AMOUNT, false)
       .accounts({
-        marginfiGroup: config.GROUP,
+        // marginfiGroup: config.GROUP,
         marginfiAccount: config.ACCOUNT,
-        signer: wallet.publicKey,
+        // signer: wallet.publicKey,
         bank: config.BANK,
         signerTokenAccount: ata,
         // bankLiquidityVault = deriveLiquidityVault(id, bank)

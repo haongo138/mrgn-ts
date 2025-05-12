@@ -17,6 +17,15 @@ export function loadKeypairFromFile(filePath: string): Keypair {
   return Keypair.fromSecretKey(new Uint8Array(keyData));
 }
 
+/**
+ * Load local wallet keypair from a private key string
+ * @param privateKey
+ * @returns
+ */
+export function loadKeypairFromPrivateKey(privateKey: string): Keypair {
+  return Keypair.fromSecretKey(bs58.decode(privateKey));
+}
+
 export const DEFAULT_API_URL = "https://api.mainnet-beta.solana.com";
 export function loadEnvFile(filePath: string) {
   try {

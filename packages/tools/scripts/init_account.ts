@@ -1,9 +1,11 @@
+import dotenv from "dotenv";
 import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "../../marginfi-client-v2/src/idl/marginfi.json";
-import { DEFAULT_API_URL, loadEnvFile, loadKeypairFromFile } from "./utils";
-import { assertI80F48Approx, assertKeysEqual } from "./softTests";
+import { loadKeypairFromFile, loadKeypairFromPrivateKey } from "./utils";
+
+dotenv.config();
 
 type Config = {
   PROGRAM_ID: string;
@@ -11,16 +13,15 @@ type Config = {
 };
 
 const config: Config = {
-  PROGRAM_ID: "stag8sTKds2h4KzjUw3zKTsxbqvT4XKHdaR9X9E6Rct",
-  GROUP: new PublicKey("FCPfpHA69EbS8f9KKSreTRkXbzFpunsKuYf5qNmnJjpo"),
+  PROGRAM_ID: "FAUCDbgsBkGZQtPSLdrDiU6F8nFcxq9qmQwBiBba7gdh",
+  GROUP: new PublicKey("GY5MTE56S4fcTsh6u7y1Y3vDAEc8DLCq4RPhkGokSfGx"),
 };
 
 async function main() {
   marginfiIdl.address = config.PROGRAM_ID;
-  loadEnvFile(".env.api");
-  const apiUrl = process.env.API_URL || DEFAULT_API_URL;
-  const connection = new Connection(apiUrl, "confirmed");
-  const wallet = loadKeypairFromFile(process.env.HOME + "/keys/staging-deploy.json");
+  const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT, "confirmed");
+  // const wallet = loadKeypairFromFile(process.env.MARGINFI_WALLET);
+  const wallet = loadKeypairFromPrivateKey("CtmTX2THJhvhpWCx8TUoBfb5p94wVkPpfMDgR2JZZFYWKrxZ8uAaKwDuqxrtFXtGYMnBhRSYbhWLvGNedUeFWkv");
   console.log("wallet: " + wallet.publicKey);
 
   // @ts-ignore

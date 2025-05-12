@@ -1,10 +1,9 @@
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { BigNumber } from "bignumber.js"
 
 import { loadKeypairFromFile } from "./utils";
 
-import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi-types_0.1.2";
+import { Marginfi } from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi";
 import marginfiIdl from "@mrgnlabs/marginfi-client-v2/src/idl/marginfi.json";
 import { wrappedI80F48toBigNumber } from "@mrgnlabs/mrgn-common";
 
@@ -43,7 +42,7 @@ async function main() {
   ]);
   // console.log("group banks: " + JSON.stringify(banksData[8]));
   console.log("group banks: " + JSON.stringify(banksData
-    .filter((b) => b.account.emissionsMint.toBase58() !== "11111111111111111111111111111111")
+    // .filter((b) => b.account.emissionsMint.toBase58() !== "11111111111111111111111111111111")
     .map((bank, index) => ({
       index,
       bankMint: bank.account.mint.toBase58(),
